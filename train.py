@@ -1,7 +1,5 @@
 # some important imports
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from model import GPT
 
 def tokenize(string):
@@ -36,6 +34,7 @@ with open("dataset.txt", "r", encoding='utf-8') as file:
 chars = sorted(list(set(text)))
 data = torch.tensor(tokenize(text), dtype=torch.long)
 
+# model, training, and validating configurations
 vocab_size = len(chars)
 batch_size = 64
 seq_len = 256
@@ -54,6 +53,13 @@ val_data = data[int(0.9*len(data)):]
 
 
 model = GPT(vocab_size, seq_len, n_embed, n_heads, n_layers, dropout).to(device)
+
+trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+nontrainable_params = sum(p.numel() for p in model.parameters() if not p.requires_grad)
+
+print(f"Trainable parameters: {trainable_params}")
+print(f"Non-trainable parameters: {nontrainable_params}")
+
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
 for iteration in range(max_iters):

@@ -4,8 +4,8 @@ from model import GPT
 
 def tokenize(string):
     return [chars.index(c) for c in string]
-def decode(l):
-    return "".join([chars[i] for i in l])
+def decode(idx):
+    return "".join([chars[i] for i in idx])
 
 def get_batch(batch_size, seq_len, split):
     data = train_data if split == 'train' else val_data

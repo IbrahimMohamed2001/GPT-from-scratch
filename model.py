@@ -86,8 +86,8 @@ class GPT(nn.Module):
         if targets is None:
             loss = None
         else:
-            logits.view(B * T, -1)
-            targets.view(-1)
+            logits = logits.view(B * T, -1)
+            targets = targets.view(-1)
             loss = F.cross_entropy(logits, targets)
         return logits, loss
     

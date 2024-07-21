@@ -72,7 +72,7 @@ for iteration in range(max_iters):
     xb, yb = get_batch(batch_size, seq_len, 'train')
     xb, yb = xb.to(device), yb.to(device)
     logits, loss = model(xb, yb)
-    optimizer.zero_grad(set_to_None=True)
+    optimizer.zero_grad(set_to_none=True)
     loss.backward()
     optimizer.step()
     

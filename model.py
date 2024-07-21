@@ -83,8 +83,21 @@ class GPT(nn.Module):
         x = self.blocks(x)
         logits = self.lm_head(x)
 
-        if targets:
-            loss = F.cross_entropy(logits, targets)
-        else:
+        if targets is None:
             loss = None
+        else:
+            logits.view(B * T, -1)
+            targets.view(-1)
+            loss = F.cross_entropy(logits, targets)
         return logits, loss
+    
+    def generate(self, idx, max_len):
+        for _ in range(max_len):
+            logits, loss = self(idx)
+
+            logits = logits[:, -1, :]
+            probs = F.softmax(logits, dim=-1)
+
+            idx_next = torch.multinomial(probs, num_samples=1)
+            idx = torch.cat((idx, idx_next), dim=1)
+        return idx

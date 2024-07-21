@@ -22,6 +22,7 @@ def estimate_loss(model):
         losses = torch.zeros(eval_iters)
         for i in range(eval_iters):
             X, Y = get_batch(batch_size, seq_len, split)
+            X, Y = X.to(device), Y.to(device)
             logits, loss = model(X, Y)
             losses[i] = loss.item()
         out[split] = losses.mean()
@@ -75,5 +76,5 @@ for iteration in range(max_iters):
     loss.backward()
     optimizer.step()
     
-context = torch.zeros((1, 1), dtype=torch.long)
+context = torch.zeros((1, 1), dtype=torch.long).to(device)
 print(decode(model.generate(context, 500)[0].tolist()))

@@ -3,14 +3,14 @@ import torch
 from model import GPT
 import os
 
-def save_checkpoint(model, optimizer, step, filename='checkpoint_step_{step}.pth'):
-    os.makedirs('weights', exist_ok=True)
+def save_checkpoint(model, optimizer, step, folder='weights', filename='checkpoint_step_{step}.pth'):
+    os.makedirs(folder, exist_ok=True)
     checkpoint = {
         'step': step,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
     }
-    torch.save(checkpoint, os.path.join('weights', filename.format(step=step)))
+    torch.save(checkpoint, os.path.join(folder, filename.format(step=step)))
 
 def load_checkpoint(model, optimizer, folder='weights'):
     if not os.path.exists(folder):
@@ -76,6 +76,7 @@ max_steps = 10000
 learning_rate = 6e-5
 eval_iters = 200
 eval_interval = 1000
+folder_path = 'weights'
 
 train_data = data[:int(0.9*len(data))]
 val_data = data[int(0.9*len(data)):]
@@ -90,11 +91,11 @@ print(f"Non-trainable parameters: {nontrainable_params}")
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
-start_step = load_checkpoint(model, optimizer)
+start_step = load_checkpoint(model, optimizer, folder=folder_path)
 for step in range(start_step, max_steps):
     
     if (step + 1) % eval_interval == 0:
-        save_checkpoint(model, optimizer, step + 1)
+        save_checkpoint(model, optimizer, step + 1, folder_path)
         losses = estimate_loss(model)
         print(f"step {step + 1} ,, train loss: {losses['train']:.4f} ,, val loss: {losses['val']:.4f}")
     

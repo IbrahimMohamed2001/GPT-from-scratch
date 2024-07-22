@@ -69,6 +69,7 @@ class DecoderBlock(nn.Module):
 class GPT(nn.Module):
     def __init__(self, vocab_size, seq_len, n_embed, n_heads, n_layers, dropout):
         super().__init__()
+        self.seq_len = seq_len
         self.token_embedding_table = nn.Embedding(vocab_size, n_embed)
         self.position_embedding_table = nn.Embedding(seq_len, n_embed)
         self.blocks = nn.Sequential(*[DecoderBlock(n_embed, n_heads, seq_len, dropout) for _ in range(n_layers)])
@@ -93,8 +94,8 @@ class GPT(nn.Module):
     
     def generate(self, idx, max_len):
         for _ in range(max_len):
-            logits, loss = self(idx)
-
+            idx_cond = idx[:, -self.seq_len:]
+            logits, loss = self(idx_cond)
             logits = logits[:, -1, :]
             probs = F.softmax(logits, dim=-1)
 

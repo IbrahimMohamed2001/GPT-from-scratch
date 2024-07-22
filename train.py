@@ -2,6 +2,14 @@
 import torch
 from model import GPT
 
+def save_checkpoint(model, optimizer, step, filename='checkpoint_step_{step}.pth'):
+    checkpoint = {
+        'step': step,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+    }
+    torch.save(checkpoint, filename.format(step=step))
+
 def tokenize(string):
     return [chars.index(c) for c in string]
 def decode(idx):
@@ -52,7 +60,6 @@ eval_interval = 500
 train_data = data[:int(0.9*len(data))]
 val_data = data[int(0.9*len(data)):]
 
-
 model = GPT(vocab_size, seq_len, n_embed, n_heads, n_layers, dropout).to(device)
 
 trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -65,7 +72,8 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
 for iteration in range(max_iters):
     
-    if iteration % eval_interval == 0:
+    if (iteration + 1) % eval_interval == 0:
+        save_checkpoint(model, optimizer, iteration)
         losses = estimate_loss(model)
         print(f"step {iteration} ,, train loss: {losses['train']:.4f} ,, val loss: {losses['val']:.4f}")
     

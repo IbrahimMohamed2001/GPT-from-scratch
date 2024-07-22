@@ -1,14 +1,34 @@
 # some important imports
 import torch
 from model import GPT
+import os
 
 def save_checkpoint(model, optimizer, step, filename='checkpoint_step_{step}.pth'):
+    os.makedirs('weights', exist_ok=True)
     checkpoint = {
         'step': step,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
     }
-    torch.save(checkpoint, filename.format(step=step))
+    torch.save(checkpoint, os.path.join('weights', filename.format(step=step)))
+
+def load_checkpoint(model, optimizer, folder='weights'):
+    if not os.path.exists(folder):
+        print("No checkpoints found.")
+        return 0  # No checkpoint to load
+
+    checkpoints = [f for f in os.listdir(folder) if f.startswith('checkpoint_step_') and f.endswith('.pth')]
+    if not checkpoints:
+        print("No checkpoints found.")
+        return 0  # No checkpoint to load
+
+    latest_checkpoint = max(checkpoints, key=lambda f: int(f.split('_')[2].split('.')[0]))
+    checkpoint_path = os.path.join(folder, latest_checkpoint)
+    checkpoint = torch.load(checkpoint_path)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    print(f"Loaded checkpoint from {checkpoint_path} at step {checkpoint['step']}")
+    return checkpoint['step']
 
 def tokenize(string):
     return [chars.index(c) for c in string]
@@ -52,10 +72,10 @@ n_embed = 512
 n_heads = 8
 n_layers = 6
 dropout = 0.2
-max_iters = 10000
+max_steps = 10000
 learning_rate = 6e-5
 eval_iters = 200
-eval_interval = 500
+eval_interval = 1000
 
 train_data = data[:int(0.9*len(data))]
 val_data = data[int(0.9*len(data)):]
@@ -70,12 +90,13 @@ print(f"Non-trainable parameters: {nontrainable_params}")
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
-for iteration in range(max_iters):
+start_step = load_checkpoint(model, optimizer)
+for step in range(start_step, max_steps):
     
-    if (iteration + 1) % eval_interval == 0:
-        save_checkpoint(model, optimizer, iteration)
+    if (step + 1) % eval_interval == 0:
+        save_checkpoint(model, optimizer, step + 1)
         losses = estimate_loss(model)
-        print(f"step {iteration} ,, train loss: {losses['train']:.4f} ,, val loss: {losses['val']:.4f}")
+        print(f"step {step + 1} ,, train loss: {losses['train']:.4f} ,, val loss: {losses['val']:.4f}")
     
     xb, yb = get_batch(batch_size, seq_len, 'train')
     xb, yb = xb.to(device), yb.to(device)
@@ -83,6 +104,6 @@ for iteration in range(max_iters):
     optimizer.zero_grad(set_to_none=True)
     loss.backward()
     optimizer.step()
-    
+
 context = torch.zeros((1, 1), dtype=torch.long).to(device)
 print(decode(model.generate(context, 500)[0].tolist()))

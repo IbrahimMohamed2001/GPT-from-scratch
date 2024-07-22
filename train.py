@@ -46,13 +46,13 @@ data = torch.tensor(tokenize(text), dtype=torch.long)
 # model, training, and validating configurations
 vocab_size = len(chars)
 batch_size = 64
-seq_len = 256
+seq_len = 400
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 n_embed = 512
 n_heads = 8
 n_layers = 6
 dropout = 0.2
-max_iters = 5000
+max_iters = 10000
 learning_rate = 6e-5
 eval_iters = 200
 eval_interval = 500
